@@ -13,11 +13,9 @@ router.post('/exchange/endpoint', function(req, res) {
     });
     
     req.on('end', function() {
-        handler.addReq( function() {
-            parser.megParser(data);
-            res.writeHead(200, {'Content-Type': 'text/xml'});
-            res.end(parser.response('accept'));
-        });
+        parser.megParser(data);
+        res.writeHead(200, {'Content-Type': 'text/xml'});
+        res.end(parser.response('accept'));
     });
 })
 .get('/', function(req, res, room) {
