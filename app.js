@@ -1,5 +1,5 @@
 var PORT = 8000;
-
+var funqueue = [];
 
 var http = require('http'),
     router = require('choreographer').router(),
@@ -13,24 +13,20 @@ router.post('/exchange/endpoint', function(req, res) {
     });
     
     req.on('end', function() {
-        //console.log(data);
-        parser.megParser(data);
-        //parser.toDataS(currJ);	
-	res.writeHead(200, {'Content-Type': 'text/xml'});
-        setTimeout(function () {
+        handler.addReq( function() {
+            parser.megParser(data);
+            res.writeHead(200, {'Content-Type': 'text/xml'});
             res.end(parser.response('accept'));
-        }, 10);
+        });
     });
 })
 .get('/', function(req, res, room) {
-  res.writeHead(200, {'Content-Type': 'text/plain'});
-  
-  res.end('Posted message to ' + room + '.\n');
+    res.writeHead(200, {'Content-Type': 'text/plain'});
+    res.end('Posted message to ' + room + '.\n');
 })
 .notFound(function(req, res) {
-  res.writeHead(404, {'Content-Type': 'text/plain'});
-  res.end('404: This server is just a skeleton for a chat server.\n' +
-    'I\'m afraid ' + req.url + ' cannot be found here.\n');
+    res.writeHead(404, {'Content-Type': 'text/plain'});
+    res.end('404');
 });
 
 http.createServer(router).listen(PORT);
