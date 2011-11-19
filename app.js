@@ -1,10 +1,11 @@
 var PORT = 8000;
 
+
 var http = require('http'),
     router = require('choreographer').router(),
     parser = require('./parser'),
     handler = require('./handler');
-
+    
 router.post('/exchange/endpoint', function(req, res) {
     var data = '';
     req.on('data', function (chunk) {
@@ -12,7 +13,7 @@ router.post('/exchange/endpoint', function(req, res) {
     });
     
     req.on('end', function() {
-	//console.log(data);
+        //console.log(data);
         parser.megParser(data);
         //parser.toDataS(currJ);	
 	res.writeHead(200, {'Content-Type': 'text/xml'});

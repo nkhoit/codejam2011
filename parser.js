@@ -34,17 +34,18 @@ module.exports = {
         var v;
         while (i<s.length) {
             v=s[i].split('=');
-            json+=(i!=s.length-1)?" "+v[0]+" : "+v[1]+",":" "+v[0]+" : "+v[1];
+            json+=(i!=s.length-1)?"\""+v[0]+"\" : \""+v[1]+"\" , ":"\""+v[0]+"\" : \""+v[1]+"\"";
             i++;
         }
-        json+=" }";
-       // console.log('json: ' + json);
+        json+="}";
+	console.log('json: ' + json);
         
-        /*var obj=json.evalJson(true);
-        console.log(obj);    
-        return obj;
-        */
-        
-	
-    }//end megParser
+	var obj=JSON.parse(json);
+	obj.Shares=parseInt(obj.Shares);
+	obj.Price=parseInt(obj.Price);
+	obj.BrokerPort=parseInt(obj.BrokerPort);	
+
+	console.log(obj);    
+    },//end megParser
+    
 };
