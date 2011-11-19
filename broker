@@ -1,0 +1,1 @@
+java  -cp broker.jar mcgill.codejam.exchange.broker.cli.BrokerCLI http://localhost:8000/exchange/endpoint /broker/endpoint 8888 5 ./XYZ.TXT

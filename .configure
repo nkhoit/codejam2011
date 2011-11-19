@@ -1,0 +1,6 @@
+npm install now
+npm install express
+npm install mysql
+npm install choreographer
+
+npm install

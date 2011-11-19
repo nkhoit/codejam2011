@@ -26,8 +26,6 @@ var server = http.createServer(function (req, res) {
                 
                 //HTTP response - accept or reject
                 
-                
-                
                 //example
                     req.on('data', function(chunk) {
                         console.log("Received body data:");
