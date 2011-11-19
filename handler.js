@@ -1,5 +1,24 @@
 var hQ = [];
+var active = true;
 
+function _push(woot) {
+    
+}
+    
+function _exec() {
+
+}
+
+module.export = {
+    addReq: function (cb) {
+        // push to queue
+        _push(cb);
+        // queue active?, if not
+        //if active;
+    }
+};
+
+/*
 var worker = false;
 var worker_cur = 0;
 var worker_max = 10;
@@ -35,3 +54,5 @@ module.export = {
         _execQ();
     }
 };
+
+*/
