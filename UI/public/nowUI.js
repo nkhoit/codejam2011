@@ -38,6 +38,9 @@ function rdiagram(){
 		var content='<tbody>';
 		var i=0;
 		while(i<json.length){
+			content+='<tr><th>';
+			//content+=;
+			content+='</th></tr>;'
 			i++;
 		}
 		content+='</tbody>';
