@@ -11,16 +11,27 @@ function _check() {
     }
 }
 
+function _shiftQ() {
+    return hQ.shift();  
+}
+    
+    
+    
+
 function _execQ() {
+    console.log("execQ");
     // if worker avaliable then run 
-        var cb = hQ.shift();
-        cb()
+    if (worker_cur < worker_max) {
+        var cb = _shiftQ();
+        cb();
         worker_cur--;
+    }
 }
 
 module.export = {
     addReq: function (cb) {
+        worker_cur++;
         hQ.push(cb);
-        _execQ()
+        _execQ();
     }
 };

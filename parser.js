@@ -1,3 +1,5 @@
+//var filter = require('./filter.js');
+
 function _accept(ref) {
     return '<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n' +
             '<Response>\n' +
@@ -38,14 +40,24 @@ module.exports = {
             i++;
         }
         json+="}";
-	console.log('json: ' + json);
-        
-	var obj=JSON.parse(json);
-	obj.Shares=parseInt(obj.Shares);
-	obj.Price=parseInt(obj.Price);
-	obj.BrokerPort=parseInt(obj.BrokerPort);	
+        console.log('json: ' + json);
+            
+        var obj=JSON.parse(json);
+        obj.Shares=parseInt(obj.Shares);
+        obj.Price=parseInt(obj.Price);
+        obj.BrokerPort=parseInt(obj.BrokerPort);	
 
-	console.log(obj);    
-    },//end megParser
+        console.log(obj);
+        /*
+        var results = filter.check(obj);    //filter check will read the json and filter it. 
+        if (results === 'V') {
+            // add to database
+            _accept(results);
+        } else {
+            // dont add to database
+            _reject(results);
+        }
+        */
+    }//end megParser
     
 };

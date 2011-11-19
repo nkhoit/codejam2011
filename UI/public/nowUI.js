@@ -1,52 +1,56 @@
 function rdiagram(){
-//	this.setup();
-
-	now.name=prompt('what is you name?',"");
+	//this.d3Setup();
+	this.snapSetup();
+	now.name="client";
 	now.receiveMessage=function(name,msg){
-		$('<div/>').text(name+":"+msg).appendTo('#msg');
-
+		if(name==='client'){
+			console.log('this is a client request');
+		}else if(name ==='exchange'){
+			console.log('this is a server request');
+		}
+		
+	};
+}
+	rdiagram.prototype.d3Setup=function(json){
 	};
 
-	$('#sendb').click(function(){
-		now.distributeMessage($('#textI').val());
-		$('#textI').val("");
-	});
-
-
-
+	rdiagram.prototype.snapSetup=function(json){
+		//test json 
+		if(typeof json=="undefined"){
+			json={};
 }
-	rdiagram.prototype.setup=function(json){
-		var n=1,	
-		    m=30,
-		    data=d3.layout.stack()(stream_layers(n,m,.1)),
-		    color=d3.interpolateRgb("#aad","#556");
-		
-		var p=20,
-		    w=960,
-		    h=500-.5-p,
-		    mx=m,
-		    my=d3.max(data,function(d){
-			return d3.max(d,function(d){
-				return d.y0+d.y;
-			});
-		    }),
-		    mz=d3.max(d,function(d){
-		    	return d3.max(d,function(d){
-				return d.y;
-			});
-		    }),
-		    x=function(d){return d.x*w/mx;},
-		    y0=function(d){return h-d.y0*h/my;};
-		
-		var vis=d3.select('#chart')
-			.append("svg:svg")
-			 .attr("width",w)
-			 .attr("height",h+p);
+		}
+		$('#snapT').html('<thead><tr>'+
+				'<th>Time Stamp</th>'+
+				'<th>Buy Sell or Execute</th>'+
+				'<th>Order Reference ID</th>'+
+				'<th>Execution Match Number</th>'+
+				'<th>Stock Amount</th>'+
+				'<th>Stock Symbol</th>'+
+				'<th>Sell Order Reference ID</th>'+
+				'<th>Buy Order Reference ID</th>'+
+				'<th>Parent Order Reference ID</th>'+
+				'<th>Price</th>'+
+				'<th>State(Fill or Unfilled)</th>'+
+				'<th>Client Telephone Number</th>'+
+				'</tr></thead>');
+
+		var content='<tbody>';
+		var i=0;
+		while(i<json.length){
+			i++;
+		}
+		content+='</tbody>';
+
 	};
 	
+	
 	$(document).ready(function(){
-		console.log('seems working');
 		new rdiagram();
+		$('#snapB').click(function(){
+			$('#snapB').toggleClass();	
+
+		});
 
 
 	});
