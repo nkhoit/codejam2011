@@ -1,5 +1,6 @@
-//var filter = require('./filter.js');
-
+var filter = require('./filter');
+var querystring = require("querystring");
+var ff=filter.init();
 function _accept(ref) {
     return '<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n' +
             '<Response>\n' +
@@ -29,35 +30,24 @@ module.exports = {
     },//end response
     
     megParser: function (msg) {
-        var json = '{';
-        var s = msg.split('&');
-        var i = 0;
-        //console.log(msg);
-        var v;
-        while (i<s.length) {
-            v=s[i].split('=');
-            json+=(i!=s.length-1)?"\""+v[0]+"\" : \""+v[1]+"\" , ":"\""+v[0]+"\" : \""+v[1]+"\"";
-            i++;
-        }
-        json+="}";
-        console.log('json: ' + json);
-            
-        var obj=JSON.parse(json);
-        obj.Shares=parseInt(obj.Shares);
-        obj.Price=parseInt(obj.Price);
-        obj.BrokerPort=parseInt(obj.BrokerPort);	
+        var obj=querystring.parse(msg);
+	obj.Shares=parseInt(obj.Shares);
+	obj.Price=parseInt(obj.Price);
+	obj.BrokerPort=parseInt(obj.BrokerPort);
 
         console.log(obj);
-        /*
-        var results = filter.check(obj);    //filter check will read the json and filter it. 
-        if (results === 'V') {
+	
+	var f=ff.getFilteredData(obj);
+        var results = f.flag;  //filter check will read the json and filter it. 
+	console.log(results);
+        if (results === "V") {
             // add to database
             _accept(results);
         } else {
             // dont add to database
+	    console.log(typeof f.BrokerEndpoint);
             _reject(results);
         }
-        */
-    }//end megParser
-    
-};
+      }
+
+}; 
