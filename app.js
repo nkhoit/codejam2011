@@ -28,9 +28,8 @@ app.post('/exchange/endpoint', function(req, res) {
 		    
 		//1. first send back to broker 
 		//parser add to queue		
-		parser.response(json, function(msg){
-			res.send(msg);
-		});
+		var msg=parser.response(json);
+		res.send(msg);
 		
 
 });	

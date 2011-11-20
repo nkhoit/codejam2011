@@ -19,7 +19,7 @@ var i = 0;
 
 module.exports = {
     
-    response: function (msg,callback) {
+    response: function (msg) {
 
 	//pass through filter	
 	var f=filter.evaluate(msg);
@@ -28,11 +28,11 @@ module.exports = {
 	if (f.flag==='V') {
             // add to database
 		i++;
-           callback(_accept(i));
+           return _accept(i);
         } else {
             // dont add to database
 	    console.log(typeof f.BrokerEndpoint);
-            callback(_reject(i));
+            return _reject(i);
         }
       }
 
