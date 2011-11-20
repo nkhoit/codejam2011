@@ -25,19 +25,18 @@ module.exports = {
         obj.Price = parseInt(msg.Price);
         obj.BrokenPort = parseInt(msg.BrokerPort);
 
-        db.placeOrder(obj);
+        
         
         //pass through filter	
         var f = filter.evaluate(obj);
         console.log(f.flag);
-            
+
+        i++;    
+        
         if (f.flag === 'V') {
-            
-            i++;
+            db.placeOrder(obj);
             return _accept(i);
         } else {
-            
-            //console.log(typeof f.BrokerEndpoint);
             return _reject(i);
         }
     }

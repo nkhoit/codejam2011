@@ -1,5 +1,5 @@
 var mysql = require('mysql');
-var TEST_DATABASE = 'exchange';
+var DATABASE = 'exchange';
 var TEST_TABLE = 'order';
 
 var client = mysql.createClient({
@@ -7,11 +7,11 @@ var client = mysql.createClient({
     password: 'Earlhaig07',
 });
 
-var countOB=1;		//Order Book table counter
-var countTrade=0; 	//Trade table counter
-var countDS=0; 		//data snaphsot table counter
-var Bcount=1; 		//used for num field, counter
-var Scount=1;		//used for num field, counter
+var countOB=3;		//Order Book table counter
+var countTrade=1; 	//Trade table counter
+var countDS=1; 		//data snaphsot table counter
+var Bcount=3; 		//used for num field, counter
+var Scount=4;		//used for num field, counter
 var Ocount=1;		//used for num field, counter
 
 // create 3 tables, only once at begining. place in a function initilaise() ?
@@ -45,14 +45,77 @@ CREATE TABLE 'NodeSample'.'DSTable' (
 ) ENGINE = MYISAM ; 
 */
 
+function _ISODateString(d) {
+    function pad(n) {
+        return (n<10 ? '0'+n : n);
+    }
+    return d.getUTCFullYear()+'-'
+    + pad(d.getUTCMonth()+1)+'-'
+    + pad(d.getUTCDate())+'T'
+    + pad(d.getUTCHours())+':'
+    + pad(d.getUTCMinutes())+':'
+    + pad(d.getUTCSeconds())+'Z'
+}
+
+
+function _makeTimestamp( dateobj ) {
+	var date = new Date( dateobj );
+	var yyyy = date.getFullYear();
+    var mm = date.getMonth() + 1;
+    var dd = date.getDate();
+    var hh = date.getHours();
+    var min = date.getMinutes();
+    var ss = date.getSeconds();
+	
+	var mysqlDateTime = yyyy + '-' + mm + '-' + dd + ' ' + hh + ':' + min + ':' + ss;
+       
+    return mysqlDateTime;
+}
+
+function retrieveB(sell_price, sell_stock, callback) {
+    var b_results = [];
+    var curr_time = new Date();
+    var results;
+    console.log(_ISODateString(curr_time));
+    console.log("niside retrieveB" + sell_price + " " + sell_stock);
+    client.query('USE ' + DATABASE);
+    client.query('SELECT * FROM data WHERE dirty=0 AND BS = "B" AND STOCK = "' + sell_stock + '" AND price >= ' + sell_price + ' AND time < "' + _ISODateString(curr_time) + '" ORDER BY price DESC')
+    .on('row', function(row) {
+        b_results.push(row);
+    }).on('end', function(row) {
+        console.log(b_results);
+        callback(b_results);
+    });
+}
+
+
+
+
+function retrieveS(sell_price, sell_stock, callback) {
+    var s_results = [];
+    var curr_time = new Date();
+    var results;
+    console.log("niside retrieveS" + sell_price + " " + sell_stock);
+    console.log(_ISODateString(curr_time));
+    client.query('USE ' + DATABASE);
+    client.query('SELECT * FROM data WHERE dirty=0 AND BS = "S" AND STOCK = "' + sell_stock + '" AND price <= ' + sell_price + ' AND time < "' + _ISODateString(curr_time) + '" ORDER BY price ASC')
+    .on('row', function(row) {
+        s_results.push(row);
+    })
+    .on('end', function(row) {
+        callback(s_results);
+    });
+}
+
+
 
 module.exports = {
     placeOrder: function (dataobject) {
-        client.query('USE ' + TEST_DATABASE);
+        client.query('USE ' + DATABASE);
         
         this_phone= dataobject.From;
-        this_BS= dataobject.BS; 
-        if( this_BS = "B") {
+        this_BS = dataobject.BS; 
+        if( this_BS == "B") {
             this_num = "B" + Bcount;
             Bcount++;
         } else {
@@ -63,8 +126,8 @@ module.exports = {
         this_shares= dataobject.Shares;
         this_price= dataobject.Price;
         this_twilio= dataobject.Twilio;
-        this_state= 'asd';
-        this_parent= 'asd';
+        this_state= '';
+        this_parent= '';
         this_address= dataobject.BrokerAddress;
         this_port= dataobject.BrokerPort;
         this_endpoint= dataobject.BrokerEndpoint;
@@ -78,8 +141,8 @@ module.exports = {
         
         
         client.query('INSERT INTO data SET phone=?, BS= ?, num= ?, stock= ?, shares=?, price=?, twilio=?, state=?', [this_phone, this_BS, this_num, this_stock, this_shares, this_price, this_twilio, this_state ]);
-        client.query('UPDATE data SET parent=?, address=?, port=?, endpoint=?, time=? WHERE num = "' + this_num + '"', [this_parent, this_address, this_port, this_endpoint, new Date()]);
-        
+        client.query('UPDATE data SET parent=?, address=?, port=?, endpoint=?, time=? WHERE num = "' + this_num + '"', [this_parent, this_address, this_port, this_endpoint, _ISODateString(new Date())]);
+        console.log("insert data");
         //client.query('SELECT * FROM data WHERE num = "' + this_num + '"').on('row', function (row) {
         //    console.log(row);
         //});
@@ -87,92 +150,259 @@ module.exports = {
         
         console.log('OBJECT ADDED');
         
+        if (this_BS == "B") //match sells
+        {
+            retrieveS(this_price, this_stock, function(results) {
+            
+                console.log("what is s_results? " + results);
+                
+                if (results.length>0) //there are matches
+                {
+                    initial_shares = this_shares;
+                    ind= 0;
+                    continueFlag=true;
+                    
+                    while(continueFlag)
+                    {
+                        
+                        if(this_shares>results[ind].shares) // must continue to match buy entry
+                        {
+                           
+							
+                            this_shares = this_shares - results[ind].shares;  //remaining shares
+                        
+                            //filleld seller, buyer incomplete
+                            client.query('UPDATE data SET state = "F", dirty=1 WHERE num = "' + results[ind].num + '"' );
+                            client.query('UPDATE data SET state = "F", dirty=1 WHERE num = "' + this_num + '"' );
+                        
+                           //to add only after all matching
+                           // client.query('INSERT INTO data SET phone=?, BS= ?, num= ?, stock= ?, shares=?, price=?, twilio=?, state=?, parent=?, address=?', [this_phone, this_BS, this_num, this_stock, this_shares, this_price, this_twilio, this_state, this_parent, this_address ]);
+                            
+                            //SET sell is complete, buy incomplete
+                            
+                            //	updateOB (key, "F");
+                            //updateOB (sellKey, "");
+                            
+                            //new entry for remaining buy
+							
+							
+							
+							client.query('INSERT INTO exec SET  BS= ?, num= ?, stock= ?, shares=?, price=?, time=?, seller=?, buyer=?, EMN=?', ["E", "E" + Ocount, this_stock, results[ind].shares, this_price, _ISODateString(new Date()), results[ind].num, this_num, Ocount]);
+							Ocount++;
+                        }
+                        else
+                        if(this_shares<results[ind].shares) //all matched, must stop, add residue entry
+                        {
+                            continueFlag =false; //all shares were matched
+                            
+                            this_num="O"+Ocount;
+                            Ocount++;
+                            
+                            remaining_shares = results[ind].shares - this_shares;  //remaining shares
+                           
+                           client.query('UPDATE data SET state = "F", dirty=1 WHERE num = "' + results[ind].num + '"');
+                           client.query('UPDATE data SET state = "F", dirty=1 WHERE num = "' + this_num + '"');
+                           
+                            this_shares=0;
+                            //insert rezidual into data 
+                            client.query('INSERT INTO data SET phone=?, BS= ?, num= ?, stock= ?, shares=?, price=?, twilio=?, state=?, parent=?, address=?', [results[ind].phone, results[ind].BS, this_num, results[ind].stock, remaining_shares, results[ind].price, results[ind].twilio, "U", results[ind].num, results[ind].address ]);
+                            console.log("insert rezidual into data ");
+                            //make exchange
+
+                            //SET buy is complete, sell incomplete	
+                            //updateOB (key, "U");
+                            //updateOB (sellKey, "F");
+                            
+                            //new entry for remaining sell
+							
+							client.query('INSERT INTO exec SET  BS= ?, num= ?, stock= ?, shares=?, price=?, time=?, seller=?, buyer=?, EMN=?', ["E", "E" + Ocount, this_stock, this_shares, this_price, _ISODateString(new Date()),  results[ind].num, this_num, Ocount]);
+							Ocount++;
+                            
+                        }
+                        else
+                        if(this_shares==results[ind].shares) //must stop, nothing to add 
+                        {
+                            //both filled
+                             client.query('UPDATE data SET state = "F", dirty=1 WHERE num = "' + results[ind].num + '"');
+                             client.query('UPDATE data SET state = "F", dirty=1 WHERE num = "' + this_num + '"');
+                        
+                            continueFlag =false;
+                            this.shares=0;
+                            //make exchange
+                            
+                            //SET both sell and buy complete
+                            //updateOB (key, "F");
+                            //updateOB (sellKey, "F");
+							client.query('INSERT INTO exec SET  BS= ?, num= ?, stock= ?, shares=?, price=?, time=?, seller=?, buyer=?, EMN=?', ["E", "E" + Ocount, this_stock, this_shares, this_price, _ISODateString(new Date()),  results[ind].num, this_num, Ocount]);
+							Ocount++;
+                            
+                        }
+                        ind++;
+                        if(ind>=results.length)
+                             continueFlag =false; // no more shares to check         
+                    }
+                    if (initial_shares!=this_shares && this_shares>0)
+                    {
+                    
+                        //only some shares sold
+                         this_num="O"+Ocount;
+                            Ocount++;
+                            console.log("11");
+                         client.query('INSERT INTO data SET phone=?, BS= ?, num= ?, stock= ?, shares=?, price=?, twilio=?, state=?, parent=?, address=?', [this_phone, this_BS, this_num, this_stock, this_shares, this_price, this_twilio, "U", this_parent, this_address ]);
+                         console.log("only some shares sold");
+                    }
+                }
+                
+            });
+        } else { //match buys
+        
+            retrieveB(this_price, this_stock, function(results) {
+        
+                console.log("what is s_results? " + results);
+                
+                if (results.length>0) //there are matches
+                {
+                    initial_shares = this_shares;
+                    ind= 0;
+                    continueFlag=true;
+                    
+                    console.log(this_shares+ " " + results[ind].shares);
+                    
+                    while(continueFlag)
+                    {
+                        console.log("loop nr"+ind+" "+results[ind].shares);
+                        if(this_shares>results[ind].shares) // must continue to match buy entry
+                        {
+                           
+                        
+                            this_shares = this_shares - results[ind].shares;  //remaining shares
+                        
+                            //filleld seller, buyer incomplete
+                            client.query('UPDATE data SET state = "F", dirty=1 WHERE num = "' + results[ind].num + '"' );
+                            client.query('UPDATE data SET state = "F", dirty=1 WHERE num = "' + this_num + '"' );
+                        
+                           //to add only after all matching
+                           // client.query('INSERT INTO data SET phone=?, BS= ?, num= ?, stock= ?, shares=?, price=?, twilio=?, state=?, parent=?, address=?', [this_phone, this_BS, this_num, this_stock, this_shares, this_price, this_twilio, this_state, this_parent, this_address ]);
+                            
+                            //SET sell is complete, buy incomplete
+                            
+                            //	updateOB (key, "F");
+                            //updateOB (sellKey, "");
+                            
+                            //new entry for remaining buy
+							client.query('INSERT INTO exec SET  BS= ?, num= ?, stock= ?, shares=?, price=?, time=?, seller=?, buyer=?, EMN=?', ["E", "E" + Ocount, this_stock, results[ind].shares, this_price, _ISODateString(new Date()),  this_num, results[ind].num, Ocount]);
+							Ocount++;
+                        }
+                        else
+                        if(this_shares<results[ind].shares) //all matched, must stop, add residue entry
+                        {
+                            continueFlag =false; //all shares were matched
+                            
+                            this_num="O"+Ocount;
+                            Ocount++;
+                            
+                            remaining_shares = results[ind].shares - this_shares;  //remaining shares
+                           
+                           client.query('UPDATE data SET state = "F", dirty=1 WHERE num = "' + results[ind].num + '"');
+                           client.query('UPDATE data SET state = "F", dirty=1 WHERE num = "' + this_num + '"');
+                           
+                            this_shares=0;
+                            //insert rezidual into data 
+                            client.query('INSERT INTO data SET phone=?, BS= ?, num= ?, stock= ?, shares=?, price=?, twilio=?, state=?, parent=?, address=?, time=?', [results[ind].phone, results[ind].BS, this_num, results[ind].stock, remaining_shares, results[ind].price, results[ind].twilio, "U", results[ind].num, results[ind].address, _ISODateString(new Date())]);
+                            console.log("insert rezidual into data ");
+                            //make exchange
+
+                            //SET buy is complete, sell incomplete	
+                            //updateOB (key, "U");
+                            //updateOB (sellKey, "F");
+                            
+                            //new entry for remaining sell
+                            client.query('INSERT INTO exec SET  BS= ?, num= ?, stock= ?, shares=?, price=?, time=?, seller=?, buyer=?, EMN=?', ["E", "E" + Ocount, this_stock, this_shares, this_price, _ISODateString(new Date()),  this_num, results[ind].num, Ocount]);
+							Ocount++;
+                        }
+                        else
+                        if(this_shares==results[ind].shares) //must stop, nothing to add 
+                        {
+                            //both filled
+                             client.query('UPDATE data SET state = "F", dirty=1 WHERE num = "' + results[ind].num + '"');
+                             client.query('UPDATE data SET state = "F", dirty=1 WHERE num = "' + this_num + '"');
+                        
+                            continueFlag =false;
+                            this.shares=0;
+                            //make exchange
+                            
+                            //SET both sell and buy complete
+                            //updateOB (key, "F");
+                            //updateOB (sellKey, "F");
+							client.query('INSERT INTO exec SET  BS= ?, num= ?, stock= ?, shares=?, price=?, time=?, seller=?, buyer=?, EMN=?', ["E", "E" + Ocount, this_stock, this_shares, this_price, _ISODateString(new Date()),  this_num, results[ind].num, Ocount]);
+							Ocount++;
+                            
+                        }
+                        ind++;
+                        if(ind>=results.length)
+                             continueFlag =false; // no more shares to check         
+                    }
+                    if (initial_shares!=this_shares && this_shares>0)
+                    {
+                    
+                        //only some shares sold
+                        safe_num=this_num;
+                         this_num="O"+Ocount;
+                            Ocount++;
+                            console.log("11");
+                         client.query('INSERT INTO data SET phone=?, BS= ?, num= ?, stock= ?, shares=?, price=?, twilio=?, state=?, parent=?, address=?, time=?', [this_phone, this_BS, this_num, this_stock, this_shares, this_price, this_twilio, "U", safe_num, this_address, _ISODateString(new Date())]);
+                         console.log("only some shares sold");
+                    }
+                }
+            
+            });
+        }
         //ADD add entry to the last row of OrderBook table
         
-        ////while (continueFlag)
-        ////{
-        ////	continueFlag=false
-            /*
-            theReturn=NULL;
-            
-            // a buy must match sells
-            if (BS = "S")
-            {
-                //QUERY - GET FIRST SELL THAT MATCHES
-                SELECT * FROM OBTable where MAX price, price>this_price, BS="B", stock=this_stock , 
-            
-                
-                if(results.length > 0) //if found a match, then do exchange
-                {
-                    if(share>sellShares) // must continue to match buy entry
-                    {
-                        //make exchange
-                        
-                        //SET sell is complete, buy incomplete
-                        updateOB (key, "F");
-                        updateOB (sellKey, "U");
-                        
-                        //new entry for remaining buy
-                    }
-                    if(share<sellShares) //all matched, must stop, add residue entry
-                    {
-                        continueFlag =false;
-                        
-                        //make exchange
+       
 
-                        //SET buy is complete, sell incomplete	
-                        updateOB (key, "U");
-                        updateOB (sellKey, "F");
-                        
-                        //new entry for remaining sell
-                    }
-                    if(share == sellShares) //must stop, nothing to add 
-                    {
-                        continueFlag =false;
-                        
-                        //make exchange
-                        
-                        //SET both sell and buy complete
-                        updateOB (key, "F");
-                        updateOB (sellKey, "F");
-                        
-                    }
-                }
-                //no match found, nothing to do, just stop
-                else
-                {
-                    continueFlag= false;
-                }
-            }
-            //sell must match the lowest buy
-            else
-            {
-                //QUERY - GET FIRST BUY THAT MATCHES 
-            }
-            */
-        ////}
-
+    },
+   
+    snapshot: function (callback) {
+        var results = [];
+        client.query('USE ' + DATABASE);
+        client.query('SELECT phone, BS, num, stock, shares, price, twilio, state, parent, address, port, endpoint, TIME, dirty,  "" AS seller,  "" AS buyer,  "" AS EMN ' +
+        'FROM data ' +
+        'UNION ALL ' +
+        'SELECT  "", BS, num, stock, shares, price,  "",  "",  "",  "",  "",  "", TIME,  "", seller, buyer, EMN ' +
+        'FROM exec ' +
+        'ORDER BY TIME ASC')
+        .on('row', function(row) {
+            results.push(row);
+        })
+        .on('end', function() {
+            callback(results);
+        });
     }
+ 
 };
 
-/*
+
 var obj={};
 
-obj.phone='zulu';
-obj.BS="B"; 
+obj.From='zulu';
+obj.BS="S"; 
 obj.Stock='XYZ';
-obj.Shares=3232;
-obj.Price=123;
+obj.Shares=323;
+obj.Price=8000;
 obj.Twilio='Y';
 obj.BrokerAddress='zulu';
 obj.BrokerPort='8080';
 obj.BrokerEndpoint='zulu';
 
 var db = require('./DBHandler');
-db.placeOrder(obj);
+//db.placeOrder(obj);
 
-function updateOB (key, newstate)
-{
-	//SET changestate
-}
+/*
+db.snapshot( function(results) {
+console.log(results);
+});
 */
+
+//db.retrieveS(90000, "XYZ");
+
