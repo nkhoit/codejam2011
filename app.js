@@ -21,14 +21,10 @@ app.use(express.bodyParser());
 var counter=0;
 app.post('/exchange/endpoint', function(req, res) { 
 		//parsing 		
-		var json=req.body;
-		    json.Shares=parseInt(req.body.Shares);
-		    json.Price=parseInt(req.body.Price);
-		    json.BrokenPort=parseInt(req.body.BrokerPort);
-		    
 		//1. first send back to broker 
 		//parser add to queue		
-		var msg=parser.response(json);
+		var msg=parser.response(req.body);
+		console.log(msg);
 		res.send(msg);
 		
 

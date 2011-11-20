@@ -116,7 +116,7 @@ filter.prototype.checkTwilio = function(e)
 
 filter.prototype.checkBrokerPort = function(e)
 {
-	if(e.BrokerPort.length < 2 || e.BrokerPort.length > 5 || typeof e.BrokerPort != "number")
+	if(e.BrokerPort < 10 || e.BrokerPort > 99999)
 	{
 		e.flag = "P";
 	}

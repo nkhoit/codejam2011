@@ -29,7 +29,7 @@ module.exports = {
 
 	//pass through filter	
 	var f=filter.evaluate(obj);
-	console.log(f.log);
+	console.log(f.flag);
         
 	if (f.flag==='V') {
             // add to database
