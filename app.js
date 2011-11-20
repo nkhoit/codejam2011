@@ -2,8 +2,8 @@ var PORT = 8000;
 var funqueue = [];
 
 var http = require('http'),
-    parser = require('./parser'),
-    handler = require('./handler'),
+    parser = require('./sscript/parser'),
+    handler = require('./sscript/handler'),
     express=require('express');
 
 var app=express.createServer();
@@ -22,16 +22,24 @@ var counter=0;
 app.post('/exchange/endpoint', function(req, res) { 
 		//parsing 		
 		var json=req.body;
-		json.Shares=parseInt(obj.Shares);
-        	json.Price=parseInt(obj.Price);
-        	json.BrokerPort=parseInt(obj.BrokerPort);
-
-		//1. first send back to broker		
-		parser.filter(json,function(response){
-			res.send(response);
+		    json.Shares=parseInt(req.body.Shares);
+		    json.Price=parseInt(req.body.Price);
+		    json.BrokenPort=parseInt(req.body.BrokerPort);
+		    
+		//1. first send back to broker 
+		//parser add to queue		
+		parser.response(json, function(msg){
+			res.send(msg);
 		});
+		
 
 });	
+
+app.get('/UI', function(req,res){
+	var tjson={};
+	res.send(tjson);
+
+});
 
 app.listen(PORT);
 console.log("running on " + PORT);

@@ -69,14 +69,8 @@ function rdiagram(json){
 		var snap=new rdiagram();
 		$('#snapB').click(function(){
 			$.get('/UI',{},function(data){
-				var json=eval('['+data+']');
-				json=json[0];
-				if(json!='undefined')
-					this.snapData=json;
-				else
-					this.snapData=[];	
+				console.log(data);
 			}).error(function(){
-			
 				console.log('Error with get');
 			});
 			snap.updateSnap();			
