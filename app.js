@@ -18,7 +18,7 @@ router.post('/exchange/endpoint', function(req, res) {
         res.end(parser.response('accept'));
     });
 })
-.get('/', function(req, res, room) {
+.get('/UI', function(req, res, room) {
     res.writeHead(200, {'Content-Type': 'text/plain'});
     res.end('Posted message to ' + room + '.\n');
 })

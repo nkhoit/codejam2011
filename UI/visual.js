@@ -1,6 +1,7 @@
 var http=require('http'),
-    express=require('express');
-	
+    express=require('express'),
+    router=require('choreographer').router();
+		
 
 var app=express.createServer();
 var everyone=require('now').initialize(app);
@@ -17,6 +18,11 @@ everyone.now.distributeMessage=function(msg){
 
 };
 
+router.get('/UI',function(req,res,room){
+	res.writeHead(200,{'Content-Type':'application/json'});
+	res.end("{BS:test}");
+
+})
 /*var io=require('socket.io').listen(app);
 var interval_id_by_session_id={};
 
