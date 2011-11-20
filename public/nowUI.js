@@ -8,7 +8,9 @@ function rdiagram(json){
 		this.snapData=json;
 	
 	//this.d3Setup();
-	this.snapSetup(this.snapData);
+	this.snapInit();
+	this.realInit();
+
 	now.name="client";
 	now.receiveMessage=function(name,msg){
 		if(name==='client'){
@@ -19,10 +21,32 @@ function rdiagram(json){
 		
 	};
 }
-	rdiagram.prototype.d3Setup=function(json){
-	};
+	function processData(json){
+		var set={};
+		set.t=[];
+		set.d1=[];
+		set.d2=[];
+		return set;
 
-	rdiagram.prototype.snapSetup=function(){
+	}
+	rdiagram.prototype.realInit=function(){
+		
+		var set=processData(this.realData);
+		var data1=[],
+		    data2=[];
+		i=0;
+		while(i<set.t.length){
+			data1[i]=[set.t[i],set.d1[i]];
+			data2[i]=[set.t[i],set.d2[i]];
+		}
+		$('#placeholder1').css({height:'300'});
+		$('#placeholder2').css({height:'300'});
+		$.plot("#placeholder1",[{color:"blue",data:data1}],{xaxis:{mode:"time",timeformat:"%h:%M:%S"}});
+		$.plot("#placeholder2",[{color:"red",data:data2}],{xaxis:{mode:"time",timeformat:"%h:%M:%S"}});
+	};
+	
+
+	rdiagram.prototype.snapInit=function(){
 		$('#snapT').html('<thead><tr>'+
 				'<th>Time Stamp</th>'+
 				'<th>Buy Sell or Execute</th>'+
@@ -70,11 +94,12 @@ function rdiagram(json){
 		$('#snapB').click(function(){
 			$.get('/UI',{},function(data){
 				console.log(data);
+				this.snapData=eval('['+data+']');
 			}).error(function(){
 				console.log('Error with get');
 			});
 			snap.updateSnap();			
 		});
-
+		
 
 	});
