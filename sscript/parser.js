@@ -1,4 +1,5 @@
 var filter = require('./filter').init();
+var db = require('./DBHandler');
 
 function _accept(ref) {
     return '<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n' +
@@ -18,28 +19,27 @@ function _reject(reason) {
 var i = 0;
 
 module.exports = {
-    
     response: function (msg) {
-		
-	var obj= msg;
-	obj.Shares=parseInt(msg.Shares);
+        var obj= msg;
+        obj.Shares=parseInt(msg.Shares);
         obj.Price=parseInt(msg.Price);
         obj.BrokenPort=parseInt(msg.BrokerPort);
 
 
-	//pass through filter	
-	var f=filter.evaluate(obj);
-	console.log(f.flag);
-        
-	if (f.flag==='V') {
+        //pass through filter	
+        var f=filter.evaluate(obj);
+        console.log(f.flag);
+            
+        if (f.flag === 'V') {
             // add to database
-		i++;
+            db.placeOrder(obj);
+            i++;
            return _accept(i);
         } else {
             // dont add to database
-	    console.log(typeof f.BrokerEndpoint);
+            console.log(typeof f.BrokerEndpoint);
             return _reject(i);
         }
-      }
+    }
 
 }; 
