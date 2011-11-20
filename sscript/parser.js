@@ -20,10 +20,16 @@ var i = 0;
 module.exports = {
     
     response: function (msg) {
+		
+	var obj= msg;
+	obj.Shares=parseInt(msg.Shares);
+        obj.Price=parseInt(msg.Price);
+        obj.BrokenPort=parseInt(msg.BrokerPort);
+
 
 	//pass through filter	
-	var f=filter.evaluate(msg);
-	console.log(f);
+	var f=filter.evaluate(obj);
+	console.log(f.log);
         
 	if (f.flag==='V') {
             // add to database
