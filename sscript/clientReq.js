@@ -1,21 +1,10 @@
-var hQ = [];
-var active = true;
-
-function _push(woot) {
-    
-}
-    
-function _exec() {
-
-}
-
 module.export = {
-    send: function (a,b,c,d,e,f) {
+    send: function (a,b,c,d,e,f,g,h,i) {
         var cookie = 'something=anything'
         
-        var address = obj.address;
-        var port = obj.address;
-        var brower = obj.address;
+        var address = g;
+        var port = h;
+        var endpoint = i;
         
         // + %2B
         var data = "MessageType=" + a + "&OrderReferenceIdentifier=" + b + "&ExecuatedShares=" + c + "&ExecutionPrice=" + d + "&MatchNumber=" + e + "&To=" + f;
@@ -23,7 +12,7 @@ module.export = {
         var client = http.createClient(80, 'localhost');
 
         var headers = {
-            'Host': 'www.example.com',
+            'Host': g + ':' + h,
             'Cookie': cookie,
             'Content-Type': 'application/x-www-form-urlencoded',
             'Content-Length': data.length

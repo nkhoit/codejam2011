@@ -4,11 +4,11 @@
 		<script src='/nowjs/now.js' type="text/javascript"></script>
 		<!--		<script src='/socket.io/socket.io.js' type="text/javascript"></script>-->
 		<link rel="stylesheet/less" type="text/css" href="bootstrap/lib/bootstrap.less">
-		<script src="/less-1.1.5.min.js" type="text/javascript"></script>
+		<script src="less-1.1.5.min.js" type="text/javascript"></script>
 i
-		<script src='nowUI.js' type="text/javascript"></script>
 		<script src='jquery.flot.js' type="text/javascript"></script>
 		<script src='chart.js' type="text/javascript"></script>
+		<script src='nowUI.js' type="text/javascript"></script>
 		
 		<link rel="text/stylesheet" src="css/index.html">
 	</head>
@@ -29,15 +29,19 @@ i
 				</div>
 				<table id='snapT' class='zebra-striped condensed-table'></table>
 				<button id="snapB" class="btn primary">Generate SnapShot</button>
+				<span>				</span>
+				<button id="reset" class="btn danger">Reset all Transation</button>
+				<span>				</span>
+				<button id="silanis" class="btn success">Send Exchange snapshot to Silanis</button>
 			
 				<div class='page-header'>
 					<h4>Stock Exchange Real-Time Graph</h4>
 				</div>
 				<div id='chart'>
 					<h4><span></span> Price</h4>
-					<div id="placeholder1"></div>
+					<div id="placeholder1"	style="height:300px"></div>
 					<h4><span></span> Volume</h4>
-					<div id="placeholder2"></div>
+					<div id="placeholder2"   style="height:300px"></div>
 
 				</div>
 					<div id="search" class="input">

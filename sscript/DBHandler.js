@@ -2,6 +2,8 @@ var mysql = require('mysql');
 var DATABASE = 'exchange';
 var TEST_TABLE = 'order';
 
+var clientReq = require('./clientReq');
+
 var client = mysql.createClient({
     user: 'root',
     password: 'Earlhaig07',
@@ -188,7 +190,9 @@ module.exports = {
 							
 							
 							client.query('INSERT INTO exec SET  BS= ?, num= ?, stock= ?, shares=?, price=?, time=?, seller=?, buyer=?, EMN=?', ["E", "E" + Ocount, this_stock, results[ind].shares, this_price, _ISODateString(new Date()), results[ind].num, this_num, Ocount]);
-							Ocount++;
+							clientReq.send("E" , this_num, this_shares, results[ind].price, Ocount, result[0].address, result[0].port, result[0].endpoint); //the buy
+                            clientReq.send("E" , result[0].num, this_shares, results[ind].price, Ocount, this_address, this_port, this_endpoint); // the sell
+                            Ocount++;
                         }
                         else
                         if(this_shares<results[ind].shares) //all matched, must stop, add residue entry
@@ -216,7 +220,10 @@ module.exports = {
                             //new entry for remaining sell
 							
 							client.query('INSERT INTO exec SET  BS= ?, num= ?, stock= ?, shares=?, price=?, time=?, seller=?, buyer=?, EMN=?', ["E", "E" + Ocount, this_stock, this_shares, this_price, _ISODateString(new Date()),  results[ind].num, this_num, Ocount]);
-							Ocount++;
+							clientReq.send("E" , this_num, this_shares, results[ind].price, Ocount, result[0].address, result[0].port, result[0].endpoint); //the buy
+                            clientReq.send("E" , result[0].num, this_shares, results[ind].price, Ocount, this_address, this_port, this_endpoint); // the sell
+                            
+                            Ocount++;
                             
                         }
                         else
@@ -234,11 +241,13 @@ module.exports = {
                             //updateOB (key, "F");
                             //updateOB (sellKey, "F");
 							client.query('INSERT INTO exec SET  BS= ?, num= ?, stock= ?, shares=?, price=?, time=?, seller=?, buyer=?, EMN=?', ["E", "E" + Ocount, this_stock, this_shares, this_price, _ISODateString(new Date()),  results[ind].num, this_num, Ocount]);
-							Ocount++;
+							clientReq.send("E" , this_num, this_shares, results[ind].price, Ocount, result[0].address, result[0].port, result[0].endpoint); //the buy
+                            clientReq.send("E" , result[0].num, this_shares, results[ind].price, Ocount, this_address, this_port, this_endpoint); // the sell
+                            Ocount++;
                             
                         }
                         ind++;
-                        if(ind>=results.length)
+                        if(ind>results.length)
                              continueFlag =false; // no more shares to check         
                     }
                     if (initial_shares!=this_shares && this_shares>0)
@@ -291,7 +300,9 @@ module.exports = {
                             
                             //new entry for remaining buy
 							client.query('INSERT INTO exec SET  BS= ?, num= ?, stock= ?, shares=?, price=?, time=?, seller=?, buyer=?, EMN=?', ["E", "E" + Ocount, this_stock, results[ind].shares, this_price, _ISODateString(new Date()),  this_num, results[ind].num, Ocount]);
-							Ocount++;
+							clientReq.send("E" , this_num, this_shares, results[ind].price, Ocount, result[0].address, result[0].port, result[0].endpoint); //the buy
+                            clientReq.send("E" , result[0].num, this_shares, results[ind].price, Ocount, this_address, this_port, this_endpoint); // the sell
+                            Ocount++;
                         }
                         else
                         if(this_shares<results[ind].shares) //all matched, must stop, add residue entry
@@ -318,7 +329,9 @@ module.exports = {
                             
                             //new entry for remaining sell
                             client.query('INSERT INTO exec SET  BS= ?, num= ?, stock= ?, shares=?, price=?, time=?, seller=?, buyer=?, EMN=?', ["E", "E" + Ocount, this_stock, this_shares, this_price, _ISODateString(new Date()),  this_num, results[ind].num, Ocount]);
-							Ocount++;
+							clientReq.send("E" , this_num, this_shares, results[ind].price, Ocount, result[0].address, result[0].port, result[0].endpoint); //the buy
+                            clientReq.send("E" , result[0].num, this_shares, results[ind].price, Ocount, this_address, this_port, this_endpoint); // the sell
+                            Ocount++;
                         }
                         else
                         if(this_shares==results[ind].shares) //must stop, nothing to add 
@@ -335,7 +348,9 @@ module.exports = {
                             //updateOB (key, "F");
                             //updateOB (sellKey, "F");
 							client.query('INSERT INTO exec SET  BS= ?, num= ?, stock= ?, shares=?, price=?, time=?, seller=?, buyer=?, EMN=?', ["E", "E" + Ocount, this_stock, this_shares, this_price, _ISODateString(new Date()),  this_num, results[ind].num, Ocount]);
-							Ocount++;
+							clientReq.send("E" , this_num, this_shares, results[ind].price, Ocount, result[0].address, result[0].port, result[0].endpoint); //the buy
+                            clientReq.send("E" , result[0].num, this_shares, results[ind].price, Ocount, this_address, this_port, this_endpoint); // the sell
+                            Ocount++;
                             
                         }
                         ind++;
@@ -366,23 +381,42 @@ module.exports = {
     snapshot: function (callback) {
         var results = [];
         client.query('USE ' + DATABASE);
-        client.query('SELECT phone, BS, num, stock, shares, price, twilio, state, parent, address, port, endpoint, TIME, dirty,  "" AS seller,  "" AS buyer,  "" AS EMN ' +
+        client.query('SELECT phone, BS, num, stock, shares, price, twilio, state, parent, address, port, endpoint, UNIX_TIMESTAMP(time) as time, dirty,  "" AS seller,  "" AS buyer,  "" AS EMN ' +
         'FROM data ' +
         'UNION ALL ' +
-        'SELECT  "", BS, num, stock, shares, price,  "",  "",  "",  "",  "",  "", TIME,  "", seller, buyer, EMN ' +
+        'SELECT  "", BS, num, stock, shares, price,  "",  "",  "",  "",  "",  "", UNIX_TIMESTAMP(time) as time,  "", seller, buyer, EMN ' +
         'FROM exec ' +
-        'ORDER BY TIME ASC')
+        'ORDER BY time ASC')
         .on('row', function(row) {
             results.push(row);
         })
         .on('end', function() {
             callback(results);
         });
+    },
+    
+    
+    searchStock: function (stock, callback) {
+        var results = [];
+        client.query('USE ' + DATABASE);
+        client.query('SELECT price, shares, UNIX_TIMESTAMP(time) as time FROM exec WHERE stock = "' + stock + '" ORDER BY time ASC')
+        .on('row', function (row) {
+            results.push(row);
+        })
+        .on('end', function() {
+            console.log(results);
+            callback(results);
+        });
+    },
+    
+    clearTables: function () {
+        client.query('USE ' + DATABASE);
+        client.query('DELETE * FROM data');
+        client.query('DELETE * FROM exec');
     }
- 
 };
 
-
+/*
 var obj={};
 
 obj.From='zulu';
@@ -395,12 +429,14 @@ obj.BrokerAddress='zulu';
 obj.BrokerPort='8080';
 obj.BrokerEndpoint='zulu';
 
-var db = require('./DBHandler');
-//db.placeOrder(obj);
 
+
+*/
+//db.placeOrder(obj);
 /*
-db.snapshot( function(results) {
-console.log(results);
+var db = require('./DBHandler');
+db.snapshot(function (results) {
+    console.log(results);
 });
 */
 
